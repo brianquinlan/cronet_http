@@ -1,4 +1,4 @@
-import 'package:flutter/services.dart';
+import 'package:flutter2/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:cronet_http/cronet_http_method_channel.dart';
 

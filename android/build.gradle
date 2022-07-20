@@ -1,4 +1,4 @@
-group 'com.example.cronet_http'
+group 'io.flutter.plugins.cronet_http'
 version '1.0-SNAPSHOT'
 
 buildscript {
@@ -38,6 +38,7 @@ android {
 
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
+        main.java.srcDirs += 'src/main/java'
     }
 
     defaultConfig {
@@ -47,4 +48,5 @@ android {
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation "com.google.android.gms:play-services-cronet:18.0.1"
 }

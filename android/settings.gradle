@@ -1,1 +1,6 @@
 rootProject.name = 'cronet_http'
+dependencyResolutionManagement {
+   repositories {
+       google()
+   }
+}

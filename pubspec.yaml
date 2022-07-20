@@ -10,12 +10,14 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  http: ^0.13.4
   plugin_platform_interface: ^2.0.2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^2.0.0
+  pigeon: ^3.2.3
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -35,7 +37,7 @@ flutter:
   plugin:
     platforms:
       android:
-        package: com.example.cronet_http
+        package: io.flutter.plugins.cronet_http
         pluginClass: CronetHttpPlugin
 
   # To add assets to your plugin package, add an assets section, like this:
@@ -53,7 +55,7 @@ flutter:
   # in this "flutter" section. Each entry in this list should have a
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
-  # example:
+  # flutter:
   # fonts:
   #   - family: Schyler
   #     fonts:

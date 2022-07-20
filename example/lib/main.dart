@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 
 import 'package:flutter/services.dart';
-import 'package:cronet_http/cronet_http.dart';
+import 'package:cronet_http/cronet_client.dart';
 
 void main() {
   runApp(const MyApp());
@@ -17,7 +17,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   String _platformVersion = 'Unknown';
-  final _cronetHttpPlugin = CronetHttp();
+  final _client = CronetClient();
 
   @override
   void initState() {
@@ -30,12 +30,12 @@ class _MyAppState extends State<MyApp> {
     String platformVersion;
     // Platform messages may fail, so we use a try/catch PlatformException.
     // We also handle the message potentially returning null.
-    try {
-      platformVersion =
-          await _cronetHttpPlugin.getPlatformVersion() ?? 'Unknown platform version';
-    } on PlatformException {
-      platformVersion = 'Failed to get platform version.';
-    }
+//    try {
+    platformVersion =
+        (await _client.get(Uri.https('example.com', ''))).headers.toString();
+    //  } catch (e) {
+    //    platformVersion = e.toString();
+    //}
 
     // If the widget was removed from the tree while the asynchronous platform
     // message was in flight, we want to discard the reply rather than calling
@@ -52,7 +52,7 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
-          title: const Text('Plugin example app'),
+          title: const Text('Plugin flutter app'),
         ),
         body: Center(
           child: Text('Running on: $_platformVersion\n'),
