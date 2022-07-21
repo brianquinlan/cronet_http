@@ -22,34 +22,11 @@ import java.util.concurrent.locks.ReentrantLock;
 
 /** CronetHttpPlugin */
 class CronetHttpPlugin : FlutterPlugin, Messages.HttpApi {
-    lateinit var flutterPluginBinding: FlutterPlugin.FlutterPluginBinding
-
-    /*
-    class Foo : EventChannel.StreamHandler {
-        public lateinit var eventSink: EventChannel.EventSink;
-        override fun onListen(arguments: Any?, events: EventChannel.EventSink) {
-            eventSink = events
-//            eventSink.success(byteArrayOf(72, 101, 108, 108, 111, 32, 119, 111, 114, 108, 100));
-//            eventSink.endOfStream();
-        }
-
-        override fun onCancel(arguments: Any?) {
-        }
-
-        public fun dart() {
-
-        }
-    }
-    */
-
-    /// The MethodChannel that will the communication between Flutter and native Android
-    ///
-    /// This local reference serves to register the plugin with the Flutter Engine and unregister it
-    /// when the Flutter Engine is detached from the Activity
-    private lateinit var channel: MethodChannel
+    private lateinit var flutterPluginBinding: FlutterPlugin.FlutterPluginBinding
     private lateinit var cronetEngine: CronetEngine;
-    private val executor: Executor = Executors.newSingleThreadExecutor()
-    private val mainThreadHandler: Handler = Handler(Looper.getMainLooper())
+    private val  executor = Executors.newSingleThreadExecutor()
+    private val mainThreadHandler = Handler(Looper.getMainLooper())
+    private var channelId = 0
 
     override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
         this.flutterPluginBinding = flutterPluginBinding;
@@ -60,8 +37,9 @@ class CronetHttpPlugin : FlutterPlugin, Messages.HttpApi {
     }
 
     override fun start(request: Messages.StartRequest): Messages.StartResponse {
+        val channelName = "plugins.flutter.io/cronet_event/" + channelId++
         val eventChannel =
-            EventChannel(flutterPluginBinding.binaryMessenger, "plugins.flutter.io/cronet_event");
+            EventChannel(flutterPluginBinding.binaryMessenger, channelName);
         lateinit var eventSink: EventChannel.EventSink;
 
         val request = cronetEngine.newUrlRequestBuilder(
@@ -128,7 +106,7 @@ class CronetHttpPlugin : FlutterPlugin, Messages.HttpApi {
             executor
         ).build()
 
-        val foo = object : EventChannel.StreamHandler {
+        val streamHandler = object : EventChannel.StreamHandler {
             override fun onListen(arguments: Any?, events: EventChannel.EventSink) {
                 eventSink = events
                 request.start()
@@ -137,10 +115,10 @@ class CronetHttpPlugin : FlutterPlugin, Messages.HttpApi {
             override fun onCancel(arguments: Any?) {
             }
         }
-        eventChannel.setStreamHandler(foo);
+        eventChannel.setStreamHandler(streamHandler);
 
         return Messages.StartResponse.Builder()
-            .setEventChannel("plugins.flutter.io/cronet_event")
+            .setEventChannel(channelName)
             .build()
     }
 
@@ -148,39 +126,6 @@ class CronetHttpPlugin : FlutterPlugin, Messages.HttpApi {
     override fun dummy(arg1: Messages.ResponseStarted, a2: Messages.ReadCompleted) {
     }
 
-
-    /*
-
-        responseController.stream, response['statusCode'] as int,
-      contentLength: response['contentLength'] as int?,
-      isRedirect: response['isRedirect'] as bool,≈≈≈∂
-      headers: (response['headers'] as Map<String, String>)
-
-*/
-    //     final r = await methodChannel.invokeMethod<Map<String, Object>>(
-    //   'startRequest', [url.toString(), method, headers, bytes]);
-/*
-  override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
-    if (call.method == "startRequest") {
-      val url: String? = call.argument("url");
-      if (url == null) {
-        result.error("startRequest error", "url cannot be null")
-      }
-
-      val requestBuilder = cronetEngine.newUrlRequestBuilder(
-        url,
-        MyUrlRequestCallback(),
-        executor)
-)
-
-val request: UrlRequest = requestBuilder.build()
-
-      result.success(mapOf("statusCode" to 200, "contentLength" to 200, "isRedirect" to false, "headers" to emptyMap<String, String>()));
-    } else {
-      result.notImplemented()
-    }
-  }
-*/
     override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
         Messages.HttpApi.setup(binding.binaryMessenger, null)
     }

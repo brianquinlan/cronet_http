@@ -27,7 +27,6 @@ class CronetClient extends BaseClient {
 
     final e = EventChannel(response.eventChannel);
     e.receiveBroadcastStream().listen((event) {
-      print(event);
       switch (event[0]) {
         case 0:
           final response = ResponseStarted.decode(event[1]);
@@ -36,16 +35,13 @@ class CronetClient extends BaseClient {
         case 1:
           final response = ReadCompleted.decode(event[1]);
           responseDataController.sink.add(response.data);
-          print(String.fromCharCodes(response.data));
           break;
         default:
           throw Exception('Unexpected event');
       }
     }, onDone: () {
-      print('Closing');
       responseDataController.close();
     }, onError: (e) {
-      print('Error: $e');
       final pe = e as PlatformException;
       final exception = ClientException(pe.message!);
       if (responseCompleter.isCompleted) {
