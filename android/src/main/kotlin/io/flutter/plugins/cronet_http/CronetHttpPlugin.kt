@@ -11,6 +11,7 @@ import org.chromium.net.CronetEngine;
 import org.chromium.net.UrlRequest;
 import org.chromium.net.CronetException
 import org.chromium.net.UrlResponseInfo
+import org.chromium.net.UploadDataProviders;
 import java.nio.ByteBuffer
 import android.os.Handler;
 import android.os.Looper;
@@ -24,7 +25,8 @@ import java.util.concurrent.locks.ReentrantLock;
 class CronetHttpPlugin : FlutterPlugin, Messages.HttpApi {
     private lateinit var flutterPluginBinding: FlutterPlugin.FlutterPluginBinding
     private lateinit var cronetEngine: CronetEngine;
-    private val  executor = Executors.newSingleThreadExecutor()
+//    private val executor = Executors.newSingleThreadExecutor()
+private val executor = Executors.newCachedThreadPool()
     private val mainThreadHandler = Handler(Looper.getMainLooper())
     private var channelId = 0
 
@@ -42,7 +44,7 @@ class CronetHttpPlugin : FlutterPlugin, Messages.HttpApi {
             EventChannel(flutterPluginBinding.binaryMessenger, channelName);
         lateinit var eventSink: EventChannel.EventSink;
 
-        val request = cronetEngine.newUrlRequestBuilder(
+        val cronetRequest = cronetEngine.newUrlRequestBuilder(
             request.url,
             object : UrlRequest.Callback() {
                 override fun onRedirectReceived(
@@ -56,15 +58,17 @@ class CronetHttpPlugin : FlutterPlugin, Messages.HttpApi {
                 }
 
                 override fun onResponseStarted(request: UrlRequest?, info: UrlResponseInfo) {
-                    mainThreadHandler.post({eventSink.success(
-                        listOf(
-                            0, Messages.ResponseStarted.Builder()
-                                .setStatusCode(info.getHttpStatusCode().toLong())
-                                .setHeaders(info.getAllHeaders())
-                                .setIsRedirect(false)
-                                .build().toMap()
+                    mainThreadHandler.post({
+                        eventSink.success(
+                            listOf(
+                                0, Messages.ResponseStarted.Builder()
+                                    .setStatusCode(info.getHttpStatusCode().toLong())
+                                    .setHeaders(info.getAllHeaders())
+                                    .setIsRedirect(false)
+                                    .build().toMap()
+                            )
                         )
-                    )})
+                    })
                     request?.read(ByteBuffer.allocateDirect(4096))
                 }
 
@@ -76,19 +80,21 @@ class CronetHttpPlugin : FlutterPlugin, Messages.HttpApi {
                     byteBuffer.flip()
                     val b = ByteArray(byteBuffer.remaining())
                     byteBuffer.get(b)
-                    mainThreadHandler.post({eventSink.success(
-                        listOf(
-                            1, Messages.ReadCompleted.Builder()
-                                .setData(b)
-                                .build().toMap()
+                    mainThreadHandler.post({
+                        eventSink.success(
+                            listOf(
+                                1, Messages.ReadCompleted.Builder()
+                                    .setData(b)
+                                    .build().toMap()
+                            )
                         )
-                    )})
+                    })
                     byteBuffer.clear()
                     request?.read(byteBuffer)
                 }
 
                 override fun onSucceeded(request: UrlRequest?, info: UrlResponseInfo?) {
-                    mainThreadHandler.post({eventSink.endOfStream()});
+                    mainThreadHandler.post({ eventSink.endOfStream() });
                 }
 
                 override fun onFailed(
@@ -96,20 +102,43 @@ class CronetHttpPlugin : FlutterPlugin, Messages.HttpApi {
                     info: UrlResponseInfo?,
                     error: CronetException
                 ) {
-                    mainThreadHandler.post({eventSink.error(
-                        "CronetException",
-                        error.toString(),
-                        ""
-                    )});
+                    mainThreadHandler.post({
+                        eventSink.error(
+                            "CronetException",
+                            error.toString(),
+                            ""
+                        )
+                    });
                 }
             },
             executor
-        ).build()
+        )
+
+        if (request.getBody().size > 0) {
+            cronetRequest.setUploadDataProvider(
+                UploadDataProviders.create(request.getBody()),
+                executor
+            )
+        }
+        cronetRequest.setHttpMethod(request.getMethod());
+        for ((key, value) in request.getHeaders()) {
+            cronetRequest.addHeader(key, value);
+        }
 
         val streamHandler = object : EventChannel.StreamHandler {
             override fun onListen(arguments: Any?, events: EventChannel.EventSink) {
                 eventSink = events
-                request.start()
+                try {
+                    cronetRequest.build().start()
+                } catch (e: Exception) {
+                    mainThreadHandler.post({
+                        eventSink.error(
+                            "CronetException",
+                            e.toString(),
+                            ""
+                        )
+                    });
+                }
             }
 
             override fun onCancel(arguments: Any?) {

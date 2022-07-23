@@ -14,13 +14,22 @@ class CronetClient extends BaseClient {
   Future<StreamedResponse> send(BaseRequest request) async {
     final stream = request.finalize();
 
-    final bytes = await stream.toBytes();
+    final body = await stream.toBytes();
+
+    var headers = request.headers;
+    if (body.length > 0 &&
+        !headers.keys.any((h) => h.toLowerCase() == 'content-type')) {
+      // Cronet requires that requests containing upload data set a
+      // 'Content-Type' header.
+      headers = Map.from(headers);
+      headers['content-type'] = 'application/octet-stream';
+    }
 
     final response = await _api.start(StartRequest(
         url: request.url.toString(),
         method: request.method,
-        headers: request.headers,
-        body: bytes));
+        headers: headers,
+        body: body));
 
     final responseCompleter = Completer<ResponseStarted>();
     final responseDataController = StreamController<Uint8List>();
@@ -43,7 +52,7 @@ class CronetClient extends BaseClient {
       responseDataController.close();
     }, onError: (e) {
       final pe = e as PlatformException;
-      final exception = ClientException(pe.message!);
+      final exception = ClientException(pe.message!, request.url);
       if (responseCompleter.isCompleted) {
         responseDataController.addError(exception);
       } else {
