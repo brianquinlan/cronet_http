@@ -29,10 +29,21 @@ class CronetClient extends BaseClient {
         url: request.url.toString(),
         method: request.method,
         headers: headers,
-        body: body));
+        body: body,
+        followRedirects: request.followRedirects,
+        maxRedirects: request.maxRedirects));
 
     final responseCompleter = Completer<ResponseStarted>();
     final responseDataController = StreamController<Uint8List>();
+
+    void raiseException(Exception exception) {
+      if (responseCompleter.isCompleted) {
+        responseDataController.addError(exception);
+      } else {
+        responseCompleter.completeError(exception);
+      }
+      responseDataController.close();
+    }
 
     final e = EventChannel(response.eventChannel);
     e.receiveBroadcastStream().listen((event) {
@@ -45,6 +56,10 @@ class CronetClient extends BaseClient {
           final response = ReadCompleted.decode(event[1]);
           responseDataController.sink.add(response.data);
           break;
+        case 2:
+          raiseException(
+              ClientException('Redirect limit exceeded', request.url));
+          break;
         default:
           throw Exception('Unexpected event');
       }
@@ -52,13 +67,7 @@ class CronetClient extends BaseClient {
       responseDataController.close();
     }, onError: (e) {
       final pe = e as PlatformException;
-      final exception = ClientException(pe.message!, request.url);
-      if (responseCompleter.isCompleted) {
-        responseDataController.addError(exception);
-      } else {
-        responseCompleter.completeError(exception);
-      }
-      responseDataController.close();
+      raiseException(ClientException(pe.message!, request.url));
     });
 
     final result = await responseCompleter.future;

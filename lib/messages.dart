@@ -7,6 +7,27 @@ import 'dart:typed_data' show Uint8List, Int32List, Int64List, Float64List;
 import 'package:flutter/foundation.dart' show WriteBuffer, ReadBuffer;
 import 'package:flutter/services.dart';
 
+class TooManyRedirects {
+  TooManyRedirects({
+    this.dummy,
+  });
+
+  int? dummy;
+
+  Object encode() {
+    final Map<Object?, Object?> pigeonMap = <Object?, Object?>{};
+    pigeonMap['dummy'] = dummy;
+    return pigeonMap;
+  }
+
+  static TooManyRedirects decode(Object message) {
+    final Map<Object?, Object?> pigeonMap = message as Map<Object?, Object?>;
+    return TooManyRedirects(
+      dummy: pigeonMap['dummy'] as int?,
+    );
+  }
+}
+
 class ReadCompleted {
   ReadCompleted({
     required this.data,
@@ -63,12 +84,16 @@ class StartRequest {
     required this.method,
     required this.headers,
     required this.body,
+    required this.maxRedirects,
+    required this.followRedirects,
   });
 
   String url;
   String method;
   Map<String?, String?> headers;
   Uint8List body;
+  int maxRedirects;
+  bool followRedirects;
 
   Object encode() {
     final Map<Object?, Object?> pigeonMap = <Object?, Object?>{};
@@ -76,6 +101,8 @@ class StartRequest {
     pigeonMap['method'] = method;
     pigeonMap['headers'] = headers;
     pigeonMap['body'] = body;
+    pigeonMap['maxRedirects'] = maxRedirects;
+    pigeonMap['followRedirects'] = followRedirects;
     return pigeonMap;
   }
 
@@ -86,6 +113,8 @@ class StartRequest {
       method: pigeonMap['method']! as String,
       headers: (pigeonMap['headers'] as Map<Object?, Object?>?)!.cast<String?, String?>(),
       body: pigeonMap['body']! as Uint8List,
+      maxRedirects: pigeonMap['maxRedirects']! as int,
+      followRedirects: pigeonMap['followRedirects']! as bool,
     );
   }
 }
@@ -131,6 +160,10 @@ class _HttpApiCodec extends StandardMessageCodec {
       buffer.putUint8(131);
       writeValue(buffer, value.encode());
     } else 
+    if (value is TooManyRedirects) {
+      buffer.putUint8(132);
+      writeValue(buffer, value.encode());
+    } else 
 {
       super.writeValue(buffer, value);
     }
@@ -149,6 +182,9 @@ class _HttpApiCodec extends StandardMessageCodec {
       
       case 131:       
         return StartResponse.decode(readValue(buffer)!);
+      
+      case 132:       
+        return TooManyRedirects.decode(readValue(buffer)!);
       
       default:      
         return super.readValueOfType(type, buffer);
@@ -194,11 +230,11 @@ class HttpApi {
     }
   }
 
-  Future<void> dummy(ResponseStarted arg_a1, ReadCompleted arg_a2) async {
+  Future<void> dummy(ResponseStarted arg_a1, ReadCompleted arg_a2, TooManyRedirects arg_a3) async {
     final BasicMessageChannel<Object?> channel = BasicMessageChannel<Object?>(
         'dev.flutter.pigeon.HttpApi.dummy', codec, binaryMessenger: _binaryMessenger);
     final Map<Object?, Object?>? replyMap =
-        await channel.send(<Object?>[arg_a1, arg_a2]) as Map<Object?, Object?>?;
+        await channel.send(<Object?>[arg_a1, arg_a2, arg_a3]) as Map<Object?, Object?>?;
     if (replyMap == null) {
       throw PlatformException(
         code: 'channel-error',

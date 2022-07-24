@@ -38,23 +38,49 @@ private val executor = Executors.newCachedThreadPool()
         Messages.HttpApi.setup(flutterPluginBinding.binaryMessenger, this);
     }
 
-    override fun start(request: Messages.StartRequest): Messages.StartResponse {
+    override fun start(startRequest: Messages.StartRequest): Messages.StartResponse {
         val channelName = "plugins.flutter.io/cronet_event/" + channelId++
         val eventChannel =
             EventChannel(flutterPluginBinding.binaryMessenger, channelName);
         lateinit var eventSink: EventChannel.EventSink;
+        var numRedirects = 0;
 
         val cronetRequest = cronetEngine.newUrlRequestBuilder(
-            request.url,
+            startRequest.url,
             object : UrlRequest.Callback() {
                 override fun onRedirectReceived(
-                    request: UrlRequest?,
-                    info: UrlResponseInfo?,
+                    request: UrlRequest,
+                    info: UrlResponseInfo,
                     newLocationUrl: String?
                 ) {
-                    // You should call the request.followRedirect() method to continue
-                    // processing the request.
-                    request?.followRedirect()
+                    if (!startRequest.getFollowRedirects()) {
+                        request.cancel();
+                        mainThreadHandler.post({
+                            eventSink.success(
+                                listOf(
+                                    0, Messages.ResponseStarted.Builder()
+                                        .setStatusCode(info.getHttpStatusCode().toLong())
+                                        .setHeaders(info.getAllHeaders())
+                                        .setIsRedirect(true)
+                                        .build().toMap()
+                                )
+                            )
+                        })
+                    }
+                    ++numRedirects;
+                    if (numRedirects <= startRequest.getMaxRedirects()) {
+                        request.followRedirect()
+                    } else {
+                        request.cancel();
+                        mainThreadHandler.post({
+                            eventSink.success(
+                                listOf(
+                                    2, Messages.TooManyRedirects.Builder()
+                                        .build().toMap()
+                                )
+                            )
+                        })
+                    }
                 }
 
                 override fun onResponseStarted(request: UrlRequest?, info: UrlResponseInfo) {
@@ -114,14 +140,14 @@ private val executor = Executors.newCachedThreadPool()
             executor
         )
 
-        if (request.getBody().size > 0) {
+        if (startRequest.getBody().size > 0) {
             cronetRequest.setUploadDataProvider(
-                UploadDataProviders.create(request.getBody()),
+                UploadDataProviders.create(startRequest.getBody()),
                 executor
             )
         }
-        cronetRequest.setHttpMethod(request.getMethod());
-        for ((key, value) in request.getHeaders()) {
+        cronetRequest.setHttpMethod(startRequest.getMethod());
+        for ((key, value) in startRequest.getHeaders()) {
             cronetRequest.addHeader(key, value);
         }
 
@@ -152,7 +178,7 @@ private val executor = Executors.newCachedThreadPool()
     }
 
 
-    override fun dummy(arg1: Messages.ResponseStarted, a2: Messages.ReadCompleted) {
+    override fun dummy(arg1: Messages.ResponseStarted, a2: Messages.ReadCompleted, a3: Messages.TooManyRedirects) {
     }
 
     override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {

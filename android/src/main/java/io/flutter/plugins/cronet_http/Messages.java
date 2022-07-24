@@ -23,6 +23,39 @@ import java.util.HashMap;
 public class Messages {
 
   /** Generated class from Pigeon that represents data sent in messages. */
+  public static class TooManyRedirects {
+    private @Nullable Long dummy;
+    public @Nullable Long getDummy() { return dummy; }
+    public void setDummy(@Nullable Long setterArg) {
+      this.dummy = setterArg;
+    }
+
+    public static final class Builder {
+      private @Nullable Long dummy;
+      public @NonNull Builder setDummy(@Nullable Long setterArg) {
+        this.dummy = setterArg;
+        return this;
+      }
+      public @NonNull TooManyRedirects build() {
+        TooManyRedirects pigeonReturn = new TooManyRedirects();
+        pigeonReturn.setDummy(dummy);
+        return pigeonReturn;
+      }
+    }
+    @NonNull Map<String, Object> toMap() {
+      Map<String, Object> toMapResult = new HashMap<>();
+      toMapResult.put("dummy", dummy);
+      return toMapResult;
+    }
+    static @NonNull TooManyRedirects fromMap(@NonNull Map<String, Object> map) {
+      TooManyRedirects pigeonResult = new TooManyRedirects();
+      Object dummy = map.get("dummy");
+      pigeonResult.setDummy((dummy == null) ? null : ((dummy instanceof Integer) ? (Integer)dummy : (Long)dummy));
+      return pigeonResult;
+    }
+  }
+
+  /** Generated class from Pigeon that represents data sent in messages. */
   public static class ReadCompleted {
     private @NonNull byte[] data;
     public @NonNull byte[] getData() { return data; }
@@ -172,6 +205,24 @@ public class Messages {
       this.body = setterArg;
     }
 
+    private @NonNull Long maxRedirects;
+    public @NonNull Long getMaxRedirects() { return maxRedirects; }
+    public void setMaxRedirects(@NonNull Long setterArg) {
+      if (setterArg == null) {
+        throw new IllegalStateException("Nonnull field \"maxRedirects\" is null.");
+      }
+      this.maxRedirects = setterArg;
+    }
+
+    private @NonNull Boolean followRedirects;
+    public @NonNull Boolean getFollowRedirects() { return followRedirects; }
+    public void setFollowRedirects(@NonNull Boolean setterArg) {
+      if (setterArg == null) {
+        throw new IllegalStateException("Nonnull field \"followRedirects\" is null.");
+      }
+      this.followRedirects = setterArg;
+    }
+
     /** Constructor is private to enforce null safety; use Builder. */
     private StartRequest() {}
     public static final class Builder {
@@ -195,12 +246,24 @@ public class Messages {
         this.body = setterArg;
         return this;
       }
+      private @Nullable Long maxRedirects;
+      public @NonNull Builder setMaxRedirects(@NonNull Long setterArg) {
+        this.maxRedirects = setterArg;
+        return this;
+      }
+      private @Nullable Boolean followRedirects;
+      public @NonNull Builder setFollowRedirects(@NonNull Boolean setterArg) {
+        this.followRedirects = setterArg;
+        return this;
+      }
       public @NonNull StartRequest build() {
         StartRequest pigeonReturn = new StartRequest();
         pigeonReturn.setUrl(url);
         pigeonReturn.setMethod(method);
         pigeonReturn.setHeaders(headers);
         pigeonReturn.setBody(body);
+        pigeonReturn.setMaxRedirects(maxRedirects);
+        pigeonReturn.setFollowRedirects(followRedirects);
         return pigeonReturn;
       }
     }
@@ -210,6 +273,8 @@ public class Messages {
       toMapResult.put("method", method);
       toMapResult.put("headers", headers);
       toMapResult.put("body", body);
+      toMapResult.put("maxRedirects", maxRedirects);
+      toMapResult.put("followRedirects", followRedirects);
       return toMapResult;
     }
     static @NonNull StartRequest fromMap(@NonNull Map<String, Object> map) {
@@ -222,6 +287,10 @@ public class Messages {
       pigeonResult.setHeaders((Map<String, String>)headers);
       Object body = map.get("body");
       pigeonResult.setBody((byte[])body);
+      Object maxRedirects = map.get("maxRedirects");
+      pigeonResult.setMaxRedirects((maxRedirects == null) ? null : ((maxRedirects instanceof Integer) ? (Integer)maxRedirects : (Long)maxRedirects));
+      Object followRedirects = map.get("followRedirects");
+      pigeonResult.setFollowRedirects((Boolean)followRedirects);
       return pigeonResult;
     }
   }
@@ -281,6 +350,9 @@ public class Messages {
         case (byte)131:         
           return StartResponse.fromMap((Map<String, Object>) readValue(buffer));
         
+        case (byte)132:         
+          return TooManyRedirects.fromMap((Map<String, Object>) readValue(buffer));
+        
         default:        
           return super.readValueOfType(type, buffer);
         
@@ -304,6 +376,10 @@ public class Messages {
         stream.write(131);
         writeValue(stream, ((StartResponse) value).toMap());
       } else 
+      if (value instanceof TooManyRedirects) {
+        stream.write(132);
+        writeValue(stream, ((TooManyRedirects) value).toMap());
+      } else 
 {
         super.writeValue(stream, value);
       }
@@ -313,7 +389,7 @@ public class Messages {
   /** Generated interface from Pigeon that represents a handler of messages from Flutter.*/
   public interface HttpApi {
     @NonNull StartResponse start(@NonNull StartRequest request);
-    void dummy(@NonNull ResponseStarted a1, @NonNull ReadCompleted a2);
+    void dummy(@NonNull ResponseStarted a1, @NonNull ReadCompleted a2, @NonNull TooManyRedirects a3);
 
     /** The codec used by HttpApi. */
     static MessageCodec<Object> getCodec() {
@@ -362,7 +438,11 @@ public class Messages {
               if (a2Arg == null) {
                 throw new NullPointerException("a2Arg unexpectedly null.");
               }
-              api.dummy(a1Arg, a2Arg);
+              TooManyRedirects a3Arg = (TooManyRedirects)args.get(2);
+              if (a3Arg == null) {
+                throw new NullPointerException("a3Arg unexpectedly null.");
+              }
+              api.dummy(a1Arg, a2Arg, a3Arg);
               wrapped.put("result", null);
             }
             catch (Error | RuntimeException exception) {
