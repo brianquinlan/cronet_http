@@ -1,7 +1,5 @@
 import 'dart:async';
-import 'dart:typed_data';
-import 'messages.dart';
-
+import 'src/messages.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart';
 
@@ -46,17 +44,16 @@ class CronetClient extends BaseClient {
     }
 
     final e = EventChannel(response.eventChannel);
-    e.receiveBroadcastStream().listen((event) {
-      switch (event[0]) {
-        case 0:
-          final response = ResponseStarted.decode(event[1]);
-          responseCompleter.complete(response);
+    e.receiveBroadcastStream().listen((e) {
+      final event = EventMessage.decode(e);
+      switch (event.type) {
+        case EventMessageType.responseStarted:
+          responseCompleter.complete(event.responseStarted!);
           break;
-        case 1:
-          final response = ReadCompleted.decode(event[1]);
-          responseDataController.sink.add(response.data);
+        case EventMessageType.readCompleted:
+          responseDataController.sink.add(event.readCompleted!.data);
           break;
-        case 2:
+        case EventMessageType.tooManyRedirects:
           raiseException(
               ClientException('Redirect limit exceeded', request.url));
           break;

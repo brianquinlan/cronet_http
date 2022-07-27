@@ -1,17 +1,21 @@
 import 'package:pigeon/pigeon.dart';
 
-class TooManyRedirects {
-  int? dummy;
+class ResponseStarted {
+  Map<String?, List<String?>?> headers;
+  int statusCode;
+  bool isRedirect;
 }
 
 class ReadCompleted {
   Uint8List data;
 }
 
-class ResponseStarted {
-  Map<String?, List<String?>?> headers;
-  int statusCode;
-  bool isRedirect;
+enum EventMessageType { responseStarted, readCompleted, tooManyRedirects }
+
+class EventMessage {
+  EventMessageType type;
+  ResponseStarted? responseStarted;
+  ReadCompleted? readCompleted;
 }
 
 class StartRequest {
@@ -30,5 +34,5 @@ class StartResponse {
 @HostApi()
 abstract class HttpApi {
   StartResponse start(StartRequest request);
-  void dummy(ResponseStarted a1, ReadCompleted a2, TooManyRedirects a3);
+  void dummy(EventMessage message);
 }

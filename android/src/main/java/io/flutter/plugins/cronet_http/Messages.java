@@ -22,74 +22,14 @@ import java.util.HashMap;
 @SuppressWarnings({"unused", "unchecked", "CodeBlock2Expr", "RedundantSuppression"})
 public class Messages {
 
-  /** Generated class from Pigeon that represents data sent in messages. */
-  public static class TooManyRedirects {
-    private @Nullable Long dummy;
-    public @Nullable Long getDummy() { return dummy; }
-    public void setDummy(@Nullable Long setterArg) {
-      this.dummy = setterArg;
-    }
+  public enum EventMessageType {
+    responseStarted(0),
+    readCompleted(1),
+    tooManyRedirects(2);
 
-    public static final class Builder {
-      private @Nullable Long dummy;
-      public @NonNull Builder setDummy(@Nullable Long setterArg) {
-        this.dummy = setterArg;
-        return this;
-      }
-      public @NonNull TooManyRedirects build() {
-        TooManyRedirects pigeonReturn = new TooManyRedirects();
-        pigeonReturn.setDummy(dummy);
-        return pigeonReturn;
-      }
-    }
-    @NonNull Map<String, Object> toMap() {
-      Map<String, Object> toMapResult = new HashMap<>();
-      toMapResult.put("dummy", dummy);
-      return toMapResult;
-    }
-    static @NonNull TooManyRedirects fromMap(@NonNull Map<String, Object> map) {
-      TooManyRedirects pigeonResult = new TooManyRedirects();
-      Object dummy = map.get("dummy");
-      pigeonResult.setDummy((dummy == null) ? null : ((dummy instanceof Integer) ? (Integer)dummy : (Long)dummy));
-      return pigeonResult;
-    }
-  }
-
-  /** Generated class from Pigeon that represents data sent in messages. */
-  public static class ReadCompleted {
-    private @NonNull byte[] data;
-    public @NonNull byte[] getData() { return data; }
-    public void setData(@NonNull byte[] setterArg) {
-      if (setterArg == null) {
-        throw new IllegalStateException("Nonnull field \"data\" is null.");
-      }
-      this.data = setterArg;
-    }
-
-    /** Constructor is private to enforce null safety; use Builder. */
-    private ReadCompleted() {}
-    public static final class Builder {
-      private @Nullable byte[] data;
-      public @NonNull Builder setData(@NonNull byte[] setterArg) {
-        this.data = setterArg;
-        return this;
-      }
-      public @NonNull ReadCompleted build() {
-        ReadCompleted pigeonReturn = new ReadCompleted();
-        pigeonReturn.setData(data);
-        return pigeonReturn;
-      }
-    }
-    @NonNull Map<String, Object> toMap() {
-      Map<String, Object> toMapResult = new HashMap<>();
-      toMapResult.put("data", data);
-      return toMapResult;
-    }
-    static @NonNull ReadCompleted fromMap(@NonNull Map<String, Object> map) {
-      ReadCompleted pigeonResult = new ReadCompleted();
-      Object data = map.get("data");
-      pigeonResult.setData((byte[])data);
-      return pigeonResult;
+    private int index;
+    private EventMessageType(final int index) {
+      this.index = index;
     }
   }
 
@@ -163,6 +103,112 @@ public class Messages {
       pigeonResult.setStatusCode((statusCode == null) ? null : ((statusCode instanceof Integer) ? (Integer)statusCode : (Long)statusCode));
       Object isRedirect = map.get("isRedirect");
       pigeonResult.setIsRedirect((Boolean)isRedirect);
+      return pigeonResult;
+    }
+  }
+
+  /** Generated class from Pigeon that represents data sent in messages. */
+  public static class ReadCompleted {
+    private @NonNull byte[] data;
+    public @NonNull byte[] getData() { return data; }
+    public void setData(@NonNull byte[] setterArg) {
+      if (setterArg == null) {
+        throw new IllegalStateException("Nonnull field \"data\" is null.");
+      }
+      this.data = setterArg;
+    }
+
+    /** Constructor is private to enforce null safety; use Builder. */
+    private ReadCompleted() {}
+    public static final class Builder {
+      private @Nullable byte[] data;
+      public @NonNull Builder setData(@NonNull byte[] setterArg) {
+        this.data = setterArg;
+        return this;
+      }
+      public @NonNull ReadCompleted build() {
+        ReadCompleted pigeonReturn = new ReadCompleted();
+        pigeonReturn.setData(data);
+        return pigeonReturn;
+      }
+    }
+    @NonNull Map<String, Object> toMap() {
+      Map<String, Object> toMapResult = new HashMap<>();
+      toMapResult.put("data", data);
+      return toMapResult;
+    }
+    static @NonNull ReadCompleted fromMap(@NonNull Map<String, Object> map) {
+      ReadCompleted pigeonResult = new ReadCompleted();
+      Object data = map.get("data");
+      pigeonResult.setData((byte[])data);
+      return pigeonResult;
+    }
+  }
+
+  /** Generated class from Pigeon that represents data sent in messages. */
+  public static class EventMessage {
+    private @NonNull EventMessageType type;
+    public @NonNull EventMessageType getType() { return type; }
+    public void setType(@NonNull EventMessageType setterArg) {
+      if (setterArg == null) {
+        throw new IllegalStateException("Nonnull field \"type\" is null.");
+      }
+      this.type = setterArg;
+    }
+
+    private @Nullable ResponseStarted responseStarted;
+    public @Nullable ResponseStarted getResponseStarted() { return responseStarted; }
+    public void setResponseStarted(@Nullable ResponseStarted setterArg) {
+      this.responseStarted = setterArg;
+    }
+
+    private @Nullable ReadCompleted readCompleted;
+    public @Nullable ReadCompleted getReadCompleted() { return readCompleted; }
+    public void setReadCompleted(@Nullable ReadCompleted setterArg) {
+      this.readCompleted = setterArg;
+    }
+
+    /** Constructor is private to enforce null safety; use Builder. */
+    private EventMessage() {}
+    public static final class Builder {
+      private @Nullable EventMessageType type;
+      public @NonNull Builder setType(@NonNull EventMessageType setterArg) {
+        this.type = setterArg;
+        return this;
+      }
+      private @Nullable ResponseStarted responseStarted;
+      public @NonNull Builder setResponseStarted(@Nullable ResponseStarted setterArg) {
+        this.responseStarted = setterArg;
+        return this;
+      }
+      private @Nullable ReadCompleted readCompleted;
+      public @NonNull Builder setReadCompleted(@Nullable ReadCompleted setterArg) {
+        this.readCompleted = setterArg;
+        return this;
+      }
+      public @NonNull EventMessage build() {
+        EventMessage pigeonReturn = new EventMessage();
+        pigeonReturn.setType(type);
+        pigeonReturn.setResponseStarted(responseStarted);
+        pigeonReturn.setReadCompleted(readCompleted);
+        return pigeonReturn;
+      }
+    }
+    @NonNull Map<String, Object> toMap() {
+      Map<String, Object> toMapResult = new HashMap<>();
+      toMapResult.put("type", type == null ? null : type.index);
+      toMapResult.put("responseStarted", (responseStarted == null) ? null : responseStarted.toMap());
+      toMapResult.put("readCompleted", (readCompleted == null) ? null : readCompleted.toMap());
+      return toMapResult;
+    }
+    static @NonNull EventMessage fromMap(@NonNull Map<String, Object> map) {
+      EventMessage pigeonResult = new EventMessage();
+      Object type = map.get("type");
+      pigeonResult.setType(type == null ? null : EventMessageType.values()[(int)type]);
+      Object responseStarted = map.get("responseStarted");
+      pigeonResult.setResponseStarted((responseStarted == null) ? null : ResponseStarted.fromMap((Map)responseStarted));
+      Object readCompleted = map.get("readCompleted");
+      pigeonResult.setReadCompleted((readCompleted == null) ? null : ReadCompleted.fromMap((Map)readCompleted));
       return pigeonResult;
     }
   }
@@ -339,19 +385,19 @@ public class Messages {
     protected Object readValueOfType(byte type, ByteBuffer buffer) {
       switch (type) {
         case (byte)128:         
-          return ReadCompleted.fromMap((Map<String, Object>) readValue(buffer));
+          return EventMessage.fromMap((Map<String, Object>) readValue(buffer));
         
         case (byte)129:         
-          return ResponseStarted.fromMap((Map<String, Object>) readValue(buffer));
+          return ReadCompleted.fromMap((Map<String, Object>) readValue(buffer));
         
         case (byte)130:         
-          return StartRequest.fromMap((Map<String, Object>) readValue(buffer));
+          return ResponseStarted.fromMap((Map<String, Object>) readValue(buffer));
         
         case (byte)131:         
-          return StartResponse.fromMap((Map<String, Object>) readValue(buffer));
+          return StartRequest.fromMap((Map<String, Object>) readValue(buffer));
         
         case (byte)132:         
-          return TooManyRedirects.fromMap((Map<String, Object>) readValue(buffer));
+          return StartResponse.fromMap((Map<String, Object>) readValue(buffer));
         
         default:        
           return super.readValueOfType(type, buffer);
@@ -360,25 +406,25 @@ public class Messages {
     }
     @Override
     protected void writeValue(ByteArrayOutputStream stream, Object value)     {
-      if (value instanceof ReadCompleted) {
+      if (value instanceof EventMessage) {
         stream.write(128);
+        writeValue(stream, ((EventMessage) value).toMap());
+      } else 
+      if (value instanceof ReadCompleted) {
+        stream.write(129);
         writeValue(stream, ((ReadCompleted) value).toMap());
       } else 
       if (value instanceof ResponseStarted) {
-        stream.write(129);
+        stream.write(130);
         writeValue(stream, ((ResponseStarted) value).toMap());
       } else 
       if (value instanceof StartRequest) {
-        stream.write(130);
+        stream.write(131);
         writeValue(stream, ((StartRequest) value).toMap());
       } else 
       if (value instanceof StartResponse) {
-        stream.write(131);
-        writeValue(stream, ((StartResponse) value).toMap());
-      } else 
-      if (value instanceof TooManyRedirects) {
         stream.write(132);
-        writeValue(stream, ((TooManyRedirects) value).toMap());
+        writeValue(stream, ((StartResponse) value).toMap());
       } else 
 {
         super.writeValue(stream, value);
@@ -389,7 +435,7 @@ public class Messages {
   /** Generated interface from Pigeon that represents a handler of messages from Flutter.*/
   public interface HttpApi {
     @NonNull StartResponse start(@NonNull StartRequest request);
-    void dummy(@NonNull ResponseStarted a1, @NonNull ReadCompleted a2, @NonNull TooManyRedirects a3);
+    void dummy(@NonNull EventMessage message);
 
     /** The codec used by HttpApi. */
     static MessageCodec<Object> getCodec() {
@@ -430,19 +476,11 @@ public class Messages {
             Map<String, Object> wrapped = new HashMap<>();
             try {
               ArrayList<Object> args = (ArrayList<Object>)message;
-              ResponseStarted a1Arg = (ResponseStarted)args.get(0);
-              if (a1Arg == null) {
-                throw new NullPointerException("a1Arg unexpectedly null.");
+              EventMessage messageArg = (EventMessage)args.get(0);
+              if (messageArg == null) {
+                throw new NullPointerException("messageArg unexpectedly null.");
               }
-              ReadCompleted a2Arg = (ReadCompleted)args.get(1);
-              if (a2Arg == null) {
-                throw new NullPointerException("a2Arg unexpectedly null.");
-              }
-              TooManyRedirects a3Arg = (TooManyRedirects)args.get(2);
-              if (a3Arg == null) {
-                throw new NullPointerException("a3Arg unexpectedly null.");
-              }
-              api.dummy(a1Arg, a2Arg, a3Arg);
+              api.dummy(messageArg);
               wrapped.put("result", null);
             }
             catch (Error | RuntimeException exception) {

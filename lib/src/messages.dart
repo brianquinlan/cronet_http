@@ -7,46 +7,10 @@ import 'dart:typed_data' show Uint8List, Int32List, Int64List, Float64List;
 import 'package:flutter/foundation.dart' show WriteBuffer, ReadBuffer;
 import 'package:flutter/services.dart';
 
-class TooManyRedirects {
-  TooManyRedirects({
-    this.dummy,
-  });
-
-  int? dummy;
-
-  Object encode() {
-    final Map<Object?, Object?> pigeonMap = <Object?, Object?>{};
-    pigeonMap['dummy'] = dummy;
-    return pigeonMap;
-  }
-
-  static TooManyRedirects decode(Object message) {
-    final Map<Object?, Object?> pigeonMap = message as Map<Object?, Object?>;
-    return TooManyRedirects(
-      dummy: pigeonMap['dummy'] as int?,
-    );
-  }
-}
-
-class ReadCompleted {
-  ReadCompleted({
-    required this.data,
-  });
-
-  Uint8List data;
-
-  Object encode() {
-    final Map<Object?, Object?> pigeonMap = <Object?, Object?>{};
-    pigeonMap['data'] = data;
-    return pigeonMap;
-  }
-
-  static ReadCompleted decode(Object message) {
-    final Map<Object?, Object?> pigeonMap = message as Map<Object?, Object?>;
-    return ReadCompleted(
-      data: pigeonMap['data']! as Uint8List,
-    );
-  }
+enum EventMessageType {
+  responseStarted,
+  readCompleted,
+  tooManyRedirects,
 }
 
 class ResponseStarted {
@@ -74,6 +38,61 @@ class ResponseStarted {
       headers: (pigeonMap['headers'] as Map<Object?, Object?>?)!.cast<String?, List<String?>?>(),
       statusCode: pigeonMap['statusCode']! as int,
       isRedirect: pigeonMap['isRedirect']! as bool,
+    );
+  }
+}
+
+class ReadCompleted {
+  ReadCompleted({
+    required this.data,
+  });
+
+  Uint8List data;
+
+  Object encode() {
+    final Map<Object?, Object?> pigeonMap = <Object?, Object?>{};
+    pigeonMap['data'] = data;
+    return pigeonMap;
+  }
+
+  static ReadCompleted decode(Object message) {
+    final Map<Object?, Object?> pigeonMap = message as Map<Object?, Object?>;
+    return ReadCompleted(
+      data: pigeonMap['data']! as Uint8List,
+    );
+  }
+}
+
+class EventMessage {
+  EventMessage({
+    required this.type,
+    this.responseStarted,
+    this.readCompleted,
+  });
+
+  EventMessageType type;
+  ResponseStarted? responseStarted;
+  ReadCompleted? readCompleted;
+
+  Object encode() {
+    final Map<Object?, Object?> pigeonMap = <Object?, Object?>{};
+    pigeonMap['type'] = type.index;
+    pigeonMap['responseStarted'] = responseStarted?.encode();
+    pigeonMap['readCompleted'] = readCompleted?.encode();
+    return pigeonMap;
+  }
+
+  static EventMessage decode(Object message) {
+    final Map<Object?, Object?> pigeonMap = message as Map<Object?, Object?>;
+    return EventMessage(
+      type: EventMessageType.values[pigeonMap['type']! as int]
+,
+      responseStarted: pigeonMap['responseStarted'] != null
+          ? ResponseStarted.decode(pigeonMap['responseStarted']!)
+          : null,
+      readCompleted: pigeonMap['readCompleted'] != null
+          ? ReadCompleted.decode(pigeonMap['readCompleted']!)
+          : null,
     );
   }
 }
@@ -144,23 +163,23 @@ class _HttpApiCodec extends StandardMessageCodec {
   const _HttpApiCodec();
   @override
   void writeValue(WriteBuffer buffer, Object? value) {
-    if (value is ReadCompleted) {
+    if (value is EventMessage) {
       buffer.putUint8(128);
       writeValue(buffer, value.encode());
     } else 
-    if (value is ResponseStarted) {
+    if (value is ReadCompleted) {
       buffer.putUint8(129);
       writeValue(buffer, value.encode());
     } else 
-    if (value is StartRequest) {
+    if (value is ResponseStarted) {
       buffer.putUint8(130);
       writeValue(buffer, value.encode());
     } else 
-    if (value is StartResponse) {
+    if (value is StartRequest) {
       buffer.putUint8(131);
       writeValue(buffer, value.encode());
     } else 
-    if (value is TooManyRedirects) {
+    if (value is StartResponse) {
       buffer.putUint8(132);
       writeValue(buffer, value.encode());
     } else 
@@ -172,19 +191,19 @@ class _HttpApiCodec extends StandardMessageCodec {
   Object? readValueOfType(int type, ReadBuffer buffer) {
     switch (type) {
       case 128:       
-        return ReadCompleted.decode(readValue(buffer)!);
+        return EventMessage.decode(readValue(buffer)!);
       
       case 129:       
-        return ResponseStarted.decode(readValue(buffer)!);
+        return ReadCompleted.decode(readValue(buffer)!);
       
       case 130:       
-        return StartRequest.decode(readValue(buffer)!);
+        return ResponseStarted.decode(readValue(buffer)!);
       
       case 131:       
-        return StartResponse.decode(readValue(buffer)!);
+        return StartRequest.decode(readValue(buffer)!);
       
       case 132:       
-        return TooManyRedirects.decode(readValue(buffer)!);
+        return StartResponse.decode(readValue(buffer)!);
       
       default:      
         return super.readValueOfType(type, buffer);
@@ -230,11 +249,11 @@ class HttpApi {
     }
   }
 
-  Future<void> dummy(ResponseStarted arg_a1, ReadCompleted arg_a2, TooManyRedirects arg_a3) async {
+  Future<void> dummy(EventMessage arg_message) async {
     final BasicMessageChannel<Object?> channel = BasicMessageChannel<Object?>(
         'dev.flutter.pigeon.HttpApi.dummy', codec, binaryMessenger: _binaryMessenger);
     final Map<Object?, Object?>? replyMap =
-        await channel.send(<Object?>[arg_a1, arg_a2, arg_a3]) as Map<Object?, Object?>?;
+        await channel.send(<Object?>[arg_message]) as Map<Object?, Object?>?;
     if (replyMap == null) {
       throw PlatformException(
         code: 'channel-error',

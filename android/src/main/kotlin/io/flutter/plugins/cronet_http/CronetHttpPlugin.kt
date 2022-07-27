@@ -25,8 +25,9 @@ import java.util.concurrent.locks.ReentrantLock;
 class CronetHttpPlugin : FlutterPlugin, Messages.HttpApi {
     private lateinit var flutterPluginBinding: FlutterPlugin.FlutterPluginBinding
     private lateinit var cronetEngine: CronetEngine;
-//    private val executor = Executors.newSingleThreadExecutor()
-private val executor = Executors.newCachedThreadPool()
+
+    //    private val executor = Executors.newSingleThreadExecutor()
+    private val executor = Executors.newCachedThreadPool()
     private val mainThreadHandler = Handler(Looper.getMainLooper())
     private var channelId = 0
 
@@ -57,13 +58,15 @@ private val executor = Executors.newCachedThreadPool()
                         request.cancel();
                         mainThreadHandler.post({
                             eventSink.success(
-                                listOf(
-                                    0, Messages.ResponseStarted.Builder()
-                                        .setStatusCode(info.getHttpStatusCode().toLong())
-                                        .setHeaders(info.getAllHeaders())
-                                        .setIsRedirect(true)
-                                        .build().toMap()
-                                )
+                                Messages.EventMessage.Builder()
+                                    .setType(Messages.EventMessageType.responseStarted)
+                                    .setResponseStarted(
+                                        Messages.ResponseStarted.Builder()
+                                            .setStatusCode(info.getHttpStatusCode().toLong())
+                                            .setHeaders(info.getAllHeaders())
+                                            .setIsRedirect(true)
+                                            .build()
+                                    ).build().toMap()
                             )
                         })
                     }
@@ -74,10 +77,9 @@ private val executor = Executors.newCachedThreadPool()
                         request.cancel();
                         mainThreadHandler.post({
                             eventSink.success(
-                                listOf(
-                                    2, Messages.TooManyRedirects.Builder()
-                                        .build().toMap()
-                                )
+                                Messages.EventMessage.Builder()
+                                    .setType(Messages.EventMessageType.tooManyRedirects).build()
+                                    .toMap()
                             )
                         })
                     }
@@ -86,13 +88,15 @@ private val executor = Executors.newCachedThreadPool()
                 override fun onResponseStarted(request: UrlRequest?, info: UrlResponseInfo) {
                     mainThreadHandler.post({
                         eventSink.success(
-                            listOf(
-                                0, Messages.ResponseStarted.Builder()
-                                    .setStatusCode(info.getHttpStatusCode().toLong())
-                                    .setHeaders(info.getAllHeaders())
-                                    .setIsRedirect(false)
-                                    .build().toMap()
-                            )
+                            Messages.EventMessage.Builder()
+                                .setType(Messages.EventMessageType.responseStarted)
+                                .setResponseStarted(
+                                    Messages.ResponseStarted.Builder()
+                                        .setStatusCode(info.getHttpStatusCode().toLong())
+                                        .setHeaders(info.getAllHeaders())
+                                        .setIsRedirect(false)
+                                        .build()
+                                ).build().toMap()
                         )
                     })
                     request?.read(ByteBuffer.allocateDirect(4096))
@@ -108,11 +112,13 @@ private val executor = Executors.newCachedThreadPool()
                     byteBuffer.get(b)
                     mainThreadHandler.post({
                         eventSink.success(
-                            listOf(
-                                1, Messages.ReadCompleted.Builder()
-                                    .setData(b)
-                                    .build().toMap()
-                            )
+                            Messages.EventMessage.Builder()
+                                .setType(Messages.EventMessageType.readCompleted)
+                                .setReadCompleted(
+                                    Messages.ReadCompleted.Builder()
+                                        .setData(b)
+                                        .build()
+                                ).build().toMap()
                         )
                     })
                     byteBuffer.clear()
@@ -178,7 +184,7 @@ private val executor = Executors.newCachedThreadPool()
     }
 
 
-    override fun dummy(arg1: Messages.ResponseStarted, a2: Messages.ReadCompleted, a3: Messages.TooManyRedirects) {
+    override fun dummy(arg1: Messages.EventMessage) {
     }
 
     override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
